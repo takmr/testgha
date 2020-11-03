@@ -12,6 +12,20 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - uses: actions/checkout@v2
+
+    - name: Zero
+      run: |
+        $VERSION = '1.2.3'
+        echo "::set-output name=version::$VERSION"
+        $FILE1 = Get-ChildItem -File "foobar.txt"
+        echo "::set-output name=f1name::$($FILE1.name)"
+        echo "::set-output name=f1path::$($FILE1.fullname)"
+        $FILE2 = Get-ChildItem -File "foo/bar*.txt"
+        echo "::set-output name=f2name::$($FILE2.name)"
+        echo "::set-output name=f2path::$($FILE2.fullname)"
+      shell: pwsh
+
     - name: First
       id: first
       run: |
