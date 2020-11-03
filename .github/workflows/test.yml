@@ -1,0 +1,64 @@
+name: GHA pwsh
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  gha-pwsh:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: First
+      id: first
+      run: |
+        $ErrorView = 'NormalView'
+        $VERSION = '1.2.3'
+        echo "::set-output name=version::$VERSION"
+        $FILE1 = Get-ChildItem -File "foobar.txt"
+        echo "::set-output name=f1name::$($FILE1.name)"
+        echo "::set-output name=f1path::$($FILE1.fullname)"
+        $FILE2 = Get-ChildItem -File "foo/bar*.txt"
+        echo "::set-output name=f2name::$($FILE2.name)"
+        echo "::set-output name=f2path::$($FILE2.fullname)"
+      shell: pwsh
+
+    - name: Second
+      id: second
+      run: |
+        $ErrorView = 'NormalView'
+        & {
+          echo "Output:"
+          echo $env:X_VERSION
+          echo $env:X_F1NAME
+          echo $env:X_F1PATH
+          echo $env:X_F2NAME
+          echo $env:X_F2PATH
+        } | Write-Output
+        & {
+          echo "Warning:"
+          echo $env:X_VERSION
+          echo $env:X_F1NAME
+          echo $env:X_F1PATH
+          echo $env:X_F2NAME
+          echo $env:X_F2PATH
+        } | Write-Warning
+        & {
+          echo "Error:"
+          echo $env:X_VERSION
+          echo $env:X_F1NAME
+          echo $env:X_F1PATH
+          echo $env:X_F2NAME
+          echo $env:X_F2PATH
+        } | Write-Error
+        echo "END"
+      shell: pwsh
+      env:
+        X_VERSION: ${{ steps.first.outputs.version }}
+        X_F1NAME: ${{ steps.first.outputs.f1name }}
+        X_F1PATH: ${{ steps.first.outputs.f1path }}
+        X_F2NAME: ${{ steps.first.outputs.f2name }}
+        X_F2PATH: ${{ steps.first.outputs.f2path }}
