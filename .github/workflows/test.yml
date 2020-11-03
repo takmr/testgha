@@ -33,13 +33,13 @@ jobs:
     - name: First
       id: first
       run: |
-        $ErrorView = 'NormalView'
         $VERSION = '1.2.3'
         echo "::set-output name=version::$VERSION"
         $FILE1 = Get-ChildItem -File "foobar.txt"
         echo "::set-output name=f1name::$($FILE1.name)"
         echo "::set-output name=f1path::$($FILE1.fullname)"
         $FILE2 = Get-ChildItem -File "foo/bar*.txt"
+        if ($FILE2 -eq $null) { Write-Error "File not found" }
         echo "::set-output name=f2name::$($FILE2.name)"
         echo "::set-output name=f2path::$($FILE2.fullname)"
       shell: pwsh
