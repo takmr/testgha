@@ -108,8 +108,6 @@ jobs:
           workdir: backend
           level: warning
           mypy_flags: 'src/'
-        env:
-          PATH: ${{ steps.install-dep.outputs.path }}
 
       - uses: liskin/gh-problem-matcher-wrap@v1
         with:
