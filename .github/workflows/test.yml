@@ -72,7 +72,7 @@ jobs:
           reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
           workdir: frontend
           level: warning
-          eslint_flags: src/ --ext .js,.ts
+          eslint_flags: src/
 
   backend-test:
 
