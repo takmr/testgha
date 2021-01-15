@@ -75,11 +75,12 @@ jobs:
           key: backend-venv-${{ steps.python-info.outputs.version }}-${{ hashFiles(env.backend-project-file) }}
 
       - name: Install backend dependencies
+        id: install-dep
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv --copies
           pipenv sync --dev
-          echo "PATH=$PWD/.venv/bin:$PATH" >> "$GITHUB_ENV"
+          echo "::set-output name=path::$PWD/.venv/bin:$PATH"
         working-directory: backend
 
       - name: Reviewdog flake8
@@ -89,6 +90,8 @@ jobs:
           workdir: backend
           level: warning
           flake8_args: 'src/'
+        env:
+          PATH: ${{ steps.install-dep.outputs.path }}
 
       - name: Reviewdog mypy
         uses: tsuyoshicho/action-mypy@v1
@@ -97,6 +100,8 @@ jobs:
           workdir: backend
           level: warning
           mypy_flags: 'src/'
+        env:
+          PATH: ${{ steps.install-dep.outputs.path }}
 
       - uses: liskin/gh-problem-matcher-wrap@v1
         with:
