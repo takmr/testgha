@@ -80,8 +80,19 @@ jobs:
         run: |
           python -m venv .venv --copies
           pipenv sync --dev
-          echo "::set-output name=path::$PWD/.venv/bin:$PATH"
+          source .venv/bin/activate
+          echo "$VIRTUAL_ENV/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> "$GITHUB_ENV"
+          echo "::set-output name=path::$PATH"
         working-directory: backend
+
+      - name: test env
+        run: |
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV"
+          echo "path=$PATH"
+          echo "steps.install-dep.outputs.path=$O_PATH"
+        env:
+          O_PATH: ${{ steps.install-dep.outputs.path }}
 
       - name: Reviewdog flake8
         uses: reviewdog/action-flake8@v3
