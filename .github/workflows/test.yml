@@ -19,7 +19,23 @@ jobs:
         with:
           node-version: 14.x
 
+      - id: node-info
+        name: Get Node information
+        run: |
+          $VERSION = node --version
+          $VERSION = ($VERSION -split '\.')[0..1] -join '.' -replace '^v',''
+          echo "::set-output name=version::$VERSION"
+        shell: pwsh
+
+      - id: cache-node
+        name: Cache Node packages
+        uses: actions/cache@v2
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-node-${{ steps.node-info.outputs.version }}-${{ hashFiles(env.frontend-project-file) }}
+
       - name: Install dependencies
+        if: steps.cache-node.outputs.cache-hit != 'true'
         run: |
           npm ci
           echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
