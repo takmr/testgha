@@ -38,10 +38,14 @@ jobs:
         if: steps.cache-node.outputs.cache-hit != 'true'
         run: |
           npm ci
-          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
         working-directory: frontend
 
-      - name: reviewdog-eslint
+      - name: Update env
+        run: |
+          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
+        working-directory: backend
+
+      - name: Reviewdog eslint
         uses: reviewdog/action-eslint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
