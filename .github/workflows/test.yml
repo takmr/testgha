@@ -41,3 +41,71 @@ jobs:
         run: |
           npm run lint
         working-directory: frontend
+
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.x
+          architecture: 'x64'
+
+      - id: python-info
+        name: Get Python information
+        run: |
+          import sys
+          version = "{}.{}.{}".format(*sys.version_info)
+          print("::set-output name=version::{}".format(version))
+        shell: python
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv --upgrade-strategy=only-if-needed
+
+      - id: cache-venv
+        name: Cache Python packages
+        uses: actions/cache@v2
+        with:
+          path: backend/.venv
+          key: backend-venv-${{ steps.python-info.outputs.version }}-${{ hashFiles(env.backend-project-file) }}
+
+      - name: Install backend dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv --copies
+          pipenv sync --dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+        working-directory: backend
+
+      - name: Reviewdog flake8
+        uses: reviewdog/action-flake8@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workdir: backend
+          level: warning
+          flake8_args: 'src/'
+
+      - name: Reviewdog mypy
+        uses: tsuyoshicho/action-mypy@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workdir: backend
+          level: warning
+          mypy_flags: 'src/'
+
+      - uses: liskin/gh-problem-matcher-wrap@v1
+        with:
+          action: add
+          linters: flake8, mypy
+
+      - name: Lint
+        shell: bash -x {0}
+        run: |
+          pipenv run flake8
+          pipenv run mypy
+        working-directory: backend

@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[scripts]
+flake8 = "flake8 src/"
+mypy = "mypy src/"
+
+[packages]
+flake8 = "*"
+mypy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
