@@ -69,7 +69,7 @@ jobs:
           reporter: github-pr-check
           workdir: frontend
           level: warning
-          eslint_flags: 'src/'
+          eslint_flags: src/ --ext .js,.ts
 
   backend-test:
 
