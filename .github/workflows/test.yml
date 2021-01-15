@@ -66,6 +66,7 @@ jobs:
         uses: reviewdog/action-eslint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
           workdir: frontend
           level: warning
           eslint_flags: 'src/'
@@ -140,6 +141,7 @@ jobs:
         uses: reviewdog/action-flake8@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
           workdir: backend/src
           level: warning
 
@@ -147,5 +149,6 @@ jobs:
         uses: tsuyoshicho/action-mypy@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
           workdir: backend/src
           level: warning
