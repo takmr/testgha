@@ -8,13 +8,9 @@ on:
 
 jobs:
 
-  frontend:
+  frontend-test:
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
 
@@ -45,19 +41,6 @@ jobs:
           npm ci
         working-directory: frontend
 
-      - name: Update env
-        run: |
-          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
-        working-directory: backend
-
-      - name: Reviewdog eslint
-        uses: reviewdog/action-eslint@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workdir: frontend
-          level: warning
-          eslint_flags: 'src/'
-
       - name: enable problem matcher
         run: |
           echo "::add-matcher::.github/eslint-stylish.problem-matcher.json"
@@ -67,13 +50,25 @@ jobs:
           npm run lint
         working-directory: frontend
 
-  backend:
+  frontend-reviewdog:
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    runs-on: ubuntu-latest
 
-    runs-on: ${{ matrix.os }}
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Reviewdog eslint
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workdir: frontend
+          level: warning
+          eslint_flags: 'src/'
+
+  backend-test:
+
+    runs-on: windows-latest
 
     steps:
 
@@ -112,11 +107,25 @@ jobs:
           pipenv sync --dev
         working-directory: backend
 
-      - name: Update env
+      - uses: liskin/gh-problem-matcher-wrap@v1
+        with:
+          action: add
+          linters: flake8, mypy
+
+      - name: Lint
+        shell: bash -x {0}
         run: |
-          source .venv/bin/activate
-          echo "$VIRTUAL_ENV/bin" >> "$GITHUB_PATH"
+          pipenv run flake8
+          pipenv run mypy
         working-directory: backend
+
+  backend-reviewdog:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
 
       - name: Reviewdog flake8
         uses: reviewdog/action-flake8@v3
@@ -131,15 +140,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workdir: backend/src
           level: warning
-
-      - uses: liskin/gh-problem-matcher-wrap@v1
-        with:
-          action: add
-          linters: flake8, mypy
-
-      - name: Lint
-        shell: bash -x {0}
-        run: |
-          pipenv run flake8
-          pipenv run mypy
-        working-directory: backend
