@@ -97,17 +97,15 @@ jobs:
         uses: reviewdog/action-flake8@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workdir: backend
+          workdir: backend/src
           level: warning
-          flake8_args: 'src/'
 
       - name: Reviewdog mypy
         uses: tsuyoshicho/action-mypy@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workdir: backend
+          workdir: backend/src
           level: warning
-          mypy_flags: 'src/'
 
       - uses: liskin/gh-problem-matcher-wrap@v1
         with:
