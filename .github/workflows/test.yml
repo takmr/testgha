@@ -152,3 +152,18 @@ jobs:
           reporter: github-pr-check
           workdir: backend/src
           level: warning
+
+  artifacts:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: List artifacts
+        run: |
+          curl \
+            -H "Authorization: ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/takmr/testgha/artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
