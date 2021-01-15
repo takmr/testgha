@@ -20,13 +20,17 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Zero
+      id: zero
+      continue-on-error: true
       run: |
         $VERSION = '1.2.3'
         echo "::set-output name=version::$VERSION"
         $FILE1 = Get-ChildItem -File "foobar.txt"
+        if ($FILE1 -eq $null) { Write-Error "File not found" }
         echo "::set-output name=f1name::$($FILE1.name)"
         echo "::set-output name=f1path::$($FILE1.fullname)"
         $FILE2 = Get-ChildItem -File "foo/bar*.txt"
+        if ($FILE2 -eq $null) { Write-Error "File not found" }
         echo "::set-output name=f2name::$($FILE2.name)"
         echo "::set-output name=f2path::$($FILE2.fullname)"
       shell: pwsh
@@ -41,13 +45,13 @@ jobs:
         echo "::set-output name=f1name::$($FILE1.name)"
         echo "::set-output name=f1path::$($FILE1.fullname)"
         $FILE2 = Get-ChildItem -File "foo/bar*.txt"
-        if ($FILE2 -eq $null) { Write-Error "File not found" }
         echo "::set-output name=f2name::$($FILE2.name)"
         echo "::set-output name=f2path::$($FILE2.fullname)"
       shell: pwsh
 
     - name: Second
       id: second
+      continue-on-error: true
       run: |
         $ErrorView = 'NormalView'
         & {
@@ -82,3 +86,17 @@ jobs:
         X_F1PATH: ${{ steps.first.outputs.f1path }}
         X_F2NAME: ${{ steps.first.outputs.f2name }}
         X_F2PATH: ${{ steps.first.outputs.f2path }}
+
+  reviewdog:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v1
+
+      - name: eslint
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          eslint_flags: 'src/'
