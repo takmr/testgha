@@ -80,14 +80,12 @@ jobs:
         run: |
           python -m venv .venv --copies
           pipenv sync --dev
-          source .venv/bin/activate
         working-directory: backend
 
-      - name: test env
+      - name: Update env
         run: |
-          echo "path=$PATH"
-          flake8 src/ || true
-          mypy src/ || true
+          source .venv/bin/activate
+          echo "$VIRTUAL_ENV/bin" >> "$GITHUB_PATH"
         working-directory: backend
 
       - name: Reviewdog flake8
