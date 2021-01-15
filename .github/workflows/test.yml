@@ -81,7 +81,6 @@ jobs:
           python -m venv .venv --copies
           pipenv sync --dev
           source .venv/bin/activate
-          echo "$VIRTUAL_ENV/bin" >> "$GITHUB_PATH"
         working-directory: backend
 
       - name: test env
