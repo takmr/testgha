@@ -83,16 +83,15 @@ jobs:
           source .venv/bin/activate
           echo "$VIRTUAL_ENV/bin" >> "$GITHUB_PATH"
           echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> "$GITHUB_ENV"
-          echo "::set-output name=path::$PATH"
         working-directory: backend
 
       - name: test env
         run: |
           echo "VIRTUAL_ENV=$VIRTUAL_ENV"
           echo "path=$PATH"
-          echo "steps.install-dep.outputs.path=$O_PATH"
-        env:
-          O_PATH: ${{ steps.install-dep.outputs.path }}
+          flake8 src/ || true
+          mypy src/ || true
+        working-directory: backend
 
       - name: Reviewdog flake8
         uses: reviewdog/action-flake8@v3
@@ -101,8 +100,6 @@ jobs:
           workdir: backend
           level: warning
           flake8_args: 'src/'
-        env:
-          PATH: ${{ steps.install-dep.outputs.path }}
 
       - name: Reviewdog mypy
         uses: tsuyoshicho/action-mypy@v1
