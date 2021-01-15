@@ -1,4 +1,4 @@
-name: GHA pwsh
+name: GHA
 
 on:
   push:
@@ -7,96 +7,148 @@ on:
   pull_request:
 
 jobs:
-  gha-pwsh:
-    continue-on-error: true
 
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
+  frontend-test:
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
 
-    - name: Zero
-      id: zero
-      continue-on-error: true
-      run: |
-        $VERSION = '1.2.3'
-        echo "::set-output name=version::$VERSION"
-        $FILE1 = Get-ChildItem -File "foobar.txt"
-        if ($FILE1 -eq $null) { Write-Error "File not found" }
-        echo "::set-output name=f1name::$($FILE1.name)"
-        echo "::set-output name=f1path::$($FILE1.fullname)"
-        $FILE2 = Get-ChildItem -File "foo/bar*.txt"
-        if ($FILE2 -eq $null) { Write-Error "File not found" }
-        echo "::set-output name=f2name::$($FILE2.name)"
-        echo "::set-output name=f2path::$($FILE2.fullname)"
-      shell: pwsh
+      - uses: actions/checkout@v2
 
-    - name: First
-      id: first
-      continue-on-error: true
-      run: |
-        $VERSION = '1.2.3'
-        echo "::set-output name=version::$VERSION"
-        $FILE1 = Get-ChildItem -File "foobar.txt"
-        echo "::set-output name=f1name::$($FILE1.name)"
-        echo "::set-output name=f1path::$($FILE1.fullname)"
-        $FILE2 = Get-ChildItem -File "foo/bar*.txt"
-        echo "::set-output name=f2name::$($FILE2.name)"
-        echo "::set-output name=f2path::$($FILE2.fullname)"
-      shell: pwsh
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
 
-    - name: Second
-      id: second
-      continue-on-error: true
-      run: |
-        $ErrorView = 'NormalView'
-        & {
-          echo "Output:"
-          echo $env:X_VERSION
-          echo $env:X_F1NAME
-          echo $env:X_F1PATH
-          echo $env:X_F2NAME
-          echo $env:X_F2PATH
-        } | Write-Output
-        & {
-          echo "Warning:"
-          echo $env:X_VERSION
-          echo $env:X_F1NAME
-          echo $env:X_F1PATH
-          echo $env:X_F2NAME
-          echo $env:X_F2PATH
-        } | Write-Warning
-        & {
-          echo "Error:"
-          echo $env:X_VERSION
-          echo $env:X_F1NAME
-          echo $env:X_F1PATH
-          echo $env:X_F2NAME
-          echo $env:X_F2PATH
-        } | Write-Error
-        echo "END"
-      shell: pwsh
-      env:
-        X_VERSION: ${{ steps.first.outputs.version }}
-        X_F1NAME: ${{ steps.first.outputs.f1name }}
-        X_F1PATH: ${{ steps.first.outputs.f1path }}
-        X_F2NAME: ${{ steps.first.outputs.f2name }}
-        X_F2PATH: ${{ steps.first.outputs.f2path }}
+      - id: node-info
+        name: Get Node information
+        run: |
+          $VERSION = node --version
+          $VERSION = ($VERSION -split '\.')[0..1] -join '.' -replace '^v',''
+          echo "::set-output name=version::$VERSION"
+        shell: pwsh
 
-  reviewdog:
+      - id: cache-node
+        name: Cache Node packages
+        uses: actions/cache@v2
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-node-${{ steps.node-info.outputs.version }}-${{ hashFiles(env.frontend-project-file) }}
+
+      - name: Install dependencies
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: |
+          npm ci
+        working-directory: frontend
+
+      - name: enable problem matcher
+        run: |
+          echo "::add-matcher::.github/eslint-stylish.problem-matcher.json"
+
+      - name: eslint
+        run: |
+          npm run lint
+        working-directory: frontend
+
+  frontend-reviewdog:
+
     runs-on: ubuntu-latest
 
     steps:
 
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
-      - name: eslint
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+      - name: Reviewdog eslint
         uses: reviewdog/action-eslint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
+          reporter: github-pr-check
+          workdir: frontend
+          level: warning
           eslint_flags: 'src/'
+
+  backend-test:
+
+    runs-on: windows-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.x
+          architecture: 'x64'
+
+      - id: python-info
+        name: Get Python information
+        run: |
+          import sys
+          version = "{}.{}.{}".format(*sys.version_info)
+          print("::set-output name=version::{}".format(version))
+        shell: python
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv --upgrade-strategy=only-if-needed
+
+      - id: cache-venv
+        name: Cache Python packages
+        uses: actions/cache@v2
+        with:
+          path: backend/.venv
+          key: ${{ runner.os }}-backend-venv-${{ steps.python-info.outputs.version }}-${{ hashFiles(env.backend-project-file) }}
+
+      - name: Install backend dependencies
+        id: install-dep
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv --copies
+          pipenv sync --dev
+        working-directory: backend
+
+      - uses: liskin/gh-problem-matcher-wrap@v1
+        with:
+          action: add
+          linters: flake8, mypy
+
+      - name: Lint
+        shell: bash -x {0}
+        run: |
+          pipenv run flake8
+          pipenv run mypy
+        working-directory: backend
+
+  backend-reviewdog:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7.x
+          architecture: 'x64'
+
+      - name: Reviewdog flake8
+        uses: reviewdog/action-flake8@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          workdir: backend/src
+          level: warning
+
+      - name: Reviewdog mypy
+        uses: tsuyoshicho/action-mypy@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          workdir: backend/src
+          level: warning

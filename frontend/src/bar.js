@@ -1,4 +1,5 @@
 const foo = 1;
-const bar = foo;
+let bar = foo;
+bar = 2;
 /* eslint-disable-next-line no-console */
 console.log(bar);

@@ -1,0 +1,17 @@
+*           text=auto
+*.cmd       text eol=crlf encoding=cp932
+*.bat       text eol=crlf encoding=cp932
+*.sh        text eol=lf
+*.html      text eol=lf
+*.scss      text eol=lf
+*.svg       text eol=lf
+*.json      text eol=lf
+*.js        text eol=lf
+*.ts        text eol=lf
+*.py        text eol=lf
+*.ini       text eol=lf
+*.yml       text eol=lf
+*.ico       -text
+*.jpg       -text
+*.png       -text
+*.gif       -text
