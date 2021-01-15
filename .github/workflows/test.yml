@@ -8,6 +8,7 @@ on:
 
 jobs:
   gha-pwsh:
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -32,6 +33,7 @@ jobs:
 
     - name: First
       id: first
+      continue-on-error: true
       run: |
         $VERSION = '1.2.3'
         echo "::set-output name=version::$VERSION"
