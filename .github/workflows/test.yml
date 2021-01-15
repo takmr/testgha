@@ -69,7 +69,7 @@ jobs:
         uses: reviewdog/action-eslint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-check
+          reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
           workdir: frontend
           level: warning
           eslint_flags: src/ --ext .js,.ts
@@ -144,7 +144,7 @@ jobs:
         uses: reviewdog/action-flake8@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-check
+          reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
           workdir: backend/src
           level: warning
 
@@ -152,6 +152,6 @@ jobs:
         uses: tsuyoshicho/action-mypy@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-check
+          reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
           workdir: backend/src
           level: warning
