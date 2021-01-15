@@ -107,6 +107,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           eslint_flags: 'src/'
+          level: warning
 
       - name: enable problem matcher
         run: |
