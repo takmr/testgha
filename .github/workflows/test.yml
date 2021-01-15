@@ -87,16 +87,24 @@ jobs:
         X_F2NAME: ${{ steps.first.outputs.f2name }}
         X_F2PATH: ${{ steps.first.outputs.f2path }}
 
-  reviewdog:
+  test:
     runs-on: ubuntu-latest
 
     steps:
 
       - uses: actions/checkout@v1
 
-      - name: eslint
+      - name: reviewdog-eslint
         uses: reviewdog/action-eslint@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           eslint_flags: 'src/'
+
+      - name: enable problem matcher
+        run: |
+          echo "::add-matcher::.github/eslint-stylish.problem-matcher.json"
+
+      - name: eslint
+        run: |
+          eslint src/
