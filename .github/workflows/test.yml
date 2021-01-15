@@ -9,7 +9,12 @@ on:
 jobs:
 
   frontend:
-    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
 
@@ -63,7 +68,12 @@ jobs:
         working-directory: frontend
 
   backend:
-    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
 
@@ -92,7 +102,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: backend/.venv
-          key: backend-venv-${{ steps.python-info.outputs.version }}-${{ hashFiles(env.backend-project-file) }}
+          key: ${{ runner.os }}-backend-venv-${{ steps.python-info.outputs.version }}-${{ hashFiles(env.backend-project-file) }}
 
       - name: Install backend dependencies
         id: install-dep
