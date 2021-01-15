@@ -38,3 +38,4 @@ jobs:
       - name: eslint
         run: |
           npm run lint
+        working-directory: frontend
