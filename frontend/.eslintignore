@@ -1,0 +1,7 @@
+# compiled output
+/node_modules/
+/release/
+/dist/
+/tmp/
+/out-tsc/
+*.js
