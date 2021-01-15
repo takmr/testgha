@@ -1,7 +1,9 @@
 a: str = 'OK'
-a = 2
+a = 'OK!'
+
 
 def func() -> None:
     pass
+
 
 print(a)
