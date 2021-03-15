@@ -6,9 +6,9 @@ on:
 jobs:
 
   job1:
+    if: 1 == 0
     runs-on: ubuntu-latest
     steps:
-      - run: sleep 30
       - run: echo OK
 
   job2:
@@ -39,6 +39,12 @@ jobs:
     steps:
       - run: echo OK
 
+  job6:
+    needs: job1
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo OK
+
   aggregate:
     if: always()
     needs:
@@ -47,10 +53,12 @@ jobs:
       - job3
       - job4
       - job5
+      - job6
     runs-on: ubuntu-latest
     steps:
-      - run: echo job1 result=${{ needs.job1.result }} outcome=${{ needs.job1.outcome }}
-      - run: echo job2 result=${{ needs.job2.result }} outcome=${{ needs.job2.outcome }}
-      - run: echo job3 result=${{ needs.job3.result }} outcome=${{ needs.job3.outcome }}
-      - run: echo job4 result=${{ needs.job4.result }} outcome=${{ needs.job4.outcome }}
-      - run: echo job5 result=${{ needs.job5.result }} outcome=${{ needs.job5.outcome }}
+      - run: echo job1 result=${{ needs.job1.result }}
+      - run: echo job2 result=${{ needs.job2.result }}
+      - run: echo job3 result=${{ needs.job3.result }}
+      - run: echo job4 result=${{ needs.job4.result }}
+      - run: echo job5 result=${{ needs.job5.result }}
+      - run: echo job6 result=${{ needs.job6.result }}
