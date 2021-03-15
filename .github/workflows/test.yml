@@ -6,9 +6,9 @@ on:
 jobs:
 
   job1:
-    if: 1 == 0
     runs-on: ubuntu-latest
     steps:
+      - run: sleep 30
       - run: echo OK
 
   job2:
