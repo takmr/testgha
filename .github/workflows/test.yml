@@ -2,156 +2,55 @@ name: GHA
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-
-env:
-  PIPENV_VENV_IN_PROJECT: 1
 
 jobs:
 
-  frontend-test:
-
-    runs-on: windows-latest
-
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14.x
-
-      - id: node-info
-        name: Get Node information
-        run: |
-          $VERSION = node --version
-          $VERSION = ($VERSION -split '\.')[0..1] -join '.' -replace '^v',''
-          echo "::set-output name=version::$VERSION"
-        shell: pwsh
-
-      - id: cache-node
-        name: Cache Node packages
-        uses: actions/cache@v2
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-frontend-node-${{ steps.node-info.outputs.version }}-${{ hashFiles(env.frontend-project-file) }}
-
-      - name: Install dependencies
-        if: steps.cache-node.outputs.cache-hit != 'true'
-        run: |
-          npm ci
-        working-directory: frontend
-
-      - name: enable problem matcher
-        run: |
-          echo "::add-matcher::.github/eslint-stylish.problem-matcher.json"
-
-      - name: eslint
-        run: |
-          npm run lint
-        working-directory: frontend
-
-  frontend-reviewdog:
-
+  job1:
+    if: 1 == 0
     runs-on: ubuntu-latest
-
     steps:
+      - run: echo OK
 
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14.x
-
-      - name: Reviewdog eslint
-        uses: reviewdog/action-eslint@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
-          workdir: frontend
-          level: warning
-          eslint_flags: src/
-
-  backend-test:
-
-    runs-on: windows-latest
-
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7.x
-          architecture: 'x64'
-
-      - id: python-info
-        name: Get Python information
-        run: |
-          import sys
-          version = "{}.{}.{}".format(*sys.version_info)
-          print("::set-output name=version::{}".format(version))
-        shell: python
-
-      - name: Install pipenv
-        run: |
-          python -m pip install --upgrade pip
-          pip install pipenv --upgrade-strategy=only-if-needed
-
-      - id: cache-venv
-        name: Cache Python packages
-        uses: actions/cache@v2
-        with:
-          path: backend/.venv
-          key: ${{ runner.os }}-backend-venv-${{ steps.python-info.outputs.version }}-${{ hashFiles(env.backend-project-file) }}
-
-      - name: Install backend dependencies
-        id: install-dep
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          python -m venv .venv --copies
-          pipenv sync --dev
-        working-directory: backend
-
-      - uses: liskin/gh-problem-matcher-wrap@v1
-        with:
-          action: add
-          linters: flake8, mypy
-
-      - name: Lint
-        shell: bash -x {0}
-        run: |
-          pipenv run flake8
-          pipenv run mypy
-        working-directory: backend
-
-  backend-reviewdog:
-
+  job2:
+    if: failure() == false
+    needs: job1
     runs-on: ubuntu-latest
-
     steps:
+      - run: echo OK
 
-      - uses: actions/checkout@v2
+  job3:
+    if: cancelled() == false
+    needs: job1
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo OK
 
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7.x
-          architecture: 'x64'
+  job4:
+    if: success() == false
+    needs: job1
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo OK
 
-      - name: Reviewdog flake8
-        uses: reviewdog/action-flake8@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
-          workdir: backend/src
-          level: warning
+  job5:
+    if: always()
+    needs: job1
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo OK
 
-      - name: Reviewdog mypy
-        uses: tsuyoshicho/action-mypy@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: ${{ (github.event_name == 'pull_request' && 'github-pr-check') || 'github-check' }}
-          workdir: backend/src
-          level: warning
+  aggregate:
+    if: always()
+    needs:
+      - job1
+      - job2
+      - job3
+      - job4
+      - job5
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo job1 result=${{ needs.job1.result }} outcome=${{ needs.job1.outcome }}
+      - run: echo job2 result=${{ needs.job2.result }} outcome=${{ needs.job2.outcome }}
+      - run: echo job3 result=${{ needs.job3.result }} outcome=${{ needs.job3.outcome }}
+      - run: echo job4 result=${{ needs.job4.result }} outcome=${{ needs.job4.outcome }}
+      - run: echo job5 result=${{ needs.job5.result }} outcome=${{ needs.job5.outcome }}
