@@ -10,6 +10,7 @@ mypy = "mypy src/"
 [packages]
 flake8 = "*"
 mypy = "*"
+dateparser = "<2"
 
 [dev-packages]
 
