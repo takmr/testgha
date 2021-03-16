@@ -4,7 +4,6 @@ on:
   push:
 
 env:
-  TZ: Asia/Tokyo
   PIPENV_VENV_IN_PROJECT: 1
 
 jobs:
